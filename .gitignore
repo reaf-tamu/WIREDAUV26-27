@@ -1,0 +1,14 @@
+# colcon build artifacts (these live one level up in ~/auv_ws, but just in case)
+build/
+install/
+log/
+
+# external driver repos pulled in by dependencies.repos — not ours to version
+vectornav/
+zed-ros2-wrapper/
+ping_sonar_ros/
+yolo_ros/
+
+# python
+__pycache__/
+*.pyc
