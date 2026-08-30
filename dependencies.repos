@@ -1,9 +1,4 @@
-# auv_software/dependencies.repos
 repositories:
-  vectornav:
-    type: git
-    url: https://github.com/dawonn/vectornav.git
-    version: ros2
   zed-ros2-wrapper:
     type: git
     url: https://github.com/stereolabs/zed-ros2-wrapper.git
@@ -11,9 +6,8 @@ repositories:
   ping_sonar_ros:
     type: git
     url: https://github.com/tasada038/ping_sonar_ros.git
-    version: main
+    version: master
   yolo_ros:
     type: git
     url: https://github.com/mgonzs13/yolo_ros.git
-    version: humble
-
+    version: main
