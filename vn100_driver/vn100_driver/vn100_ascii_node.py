@@ -146,7 +146,7 @@ class VN100AsciiNode(Node):
 
         # use our euler to quaternion function from earlier to convert the euler angles read in from 
         #    the VectorNav to the quaternion representation that the message needs
-        qx, qy, qz, qw = euler_deg_to_quaternion(yaw, pitch, roll)
+        qx, qy, qz, qw = euler_deg_to_quaternion(-yaw, -pitch, roll)
 
         # asssign sensor readings to correct message component
         msg.orientation.x = qx
