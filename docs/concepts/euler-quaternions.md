@@ -85,7 +85,7 @@ Note this only pulls out yaw, not all three angles — because that's the only o
 
 ## How we use this in the club
 
-- **`vn100_driver`**: converts the VN-100's native Euler-angle output into a quaternion, to publish a spec-compliant `sensor_msgs/Imu` message.
+- **`auv_vn100`**: converts the VN-100's native Euler-angle output into a quaternion, to publish a spec-compliant `sensor_msgs/Imu` message.
 - **The static mounting transform** (`vectornav_mount_tf`, in `auv_bringup`'s launch file): itself stored and applied as a rotation via `tf2`, using the same quaternion machinery under the hood — even though we specified it in easier-to-reason-about roll/pitch/yaw degrees when creating it.
 - **`robot_localization`'s EKF**: fuses orientation entirely in quaternion form internally, for the gimbal-lock reasons above, and outputs `/odometry/filtered` with its orientation as a quaternion too.
 - **`attitude_control_node.py`**: converts the EKF's quaternion output back into a single yaw angle (Euler, but just the one axis) — because that's what a human-intuitive PID setpoint and error actually need to be computed against.
