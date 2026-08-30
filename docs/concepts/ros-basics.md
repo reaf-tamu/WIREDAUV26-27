@@ -28,7 +28,7 @@ A website that hosts Git repos online, so the whole team can share code and see 
 
 A text-based way to control your computer — typing commands instead of clicking icons.
 
-> Almost everything in this repo happens through the terminal. Feeling slow at first is completely normal; it gets faster fast.
+> Almost everything in this repo happens through the terminal.
 
 ### Command
 
@@ -44,7 +44,7 @@ Short for "superuser do." Puts a command into administrator mode — similar to 
 
 ---
 
-## Part 2: ROS2 itself
+## Part 2: ROS2
 
 ### ROS2 (Robot Operating System 2)
 
