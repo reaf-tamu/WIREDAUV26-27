@@ -31,7 +31,7 @@ A **quaternion** represents the same rotation using **four** numbers instead of 
 
 ### Euler → quaternion
 
-This is what `euler_deg_to_quaternion()` in `vn100_driver/vn100_driver/vn100_ascii_node.py` does — the VN-100 gives us human-readable yaw/pitch/roll in its `$VNYMR` sentence, but we need to publish a proper ROS `sensor_msgs/Imu` message, which requires a quaternion.
+This is what `euler_deg_to_quaternion()` in `auv_vn100/auv_vn100/vn100_ascii_node.py` does — the VN-100 gives us human-readable yaw/pitch/roll in its `$VNYMR` sentence, but we need to publish a proper ROS `sensor_msgs/Imu` message, which requires a quaternion.
 
 **Step 1 — each single-axis rotation is itself a small quaternion.** A quaternion representing "rotate by angle θ around one specific axis" has a simple, direct formula: put `cos(θ/2)` in `w`, and put `sin(θ/2)` in whichever of x/y/z matches that axis, with the other two left at zero. So:
 

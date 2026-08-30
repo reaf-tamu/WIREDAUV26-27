@@ -19,7 +19,7 @@ import math
 def generate_launch_description():
     vectornav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
-            PathJoinSubstitution([FindPackageShare('vn100_driver'), 'launch', 'vn100.launch.py'])
+            PathJoinSubstitution([FindPackageShare('auv_vn100'), 'launch', 'vn100.launch.py'])
         ])
     )
 

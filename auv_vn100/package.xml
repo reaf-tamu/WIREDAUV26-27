@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>vn100_driver</name>
+  <name>auv_vn100</name>
   <version>0.0.1</version>
   <description>Minimal ASCII-mode ($VNYMR) driver for the VectorNav VN-100. Bypasses the vnproglib binary driver, which we could not get to publish data reliably.</description>
   <maintainer email="you@example.com">Your Name</maintainer>

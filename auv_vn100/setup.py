@@ -2,7 +2,7 @@ import os
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'vn100_driver'
+package_name = 'auv_vn100'
 
 setup(
     name=package_name,
@@ -23,7 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'vn100_ascii_node = vn100_driver.vn100_ascii_node:main',
+            'vn100_ascii_node = auv_vn100.vn100_ascii_node:main',
         ],
     },
 )

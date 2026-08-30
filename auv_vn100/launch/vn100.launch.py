@@ -5,7 +5,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package='vn100_driver',
+            package='auv_vn100',
             executable='vn100_ascii_node',
             name='vn100_ascii_node',
             output='screen',
