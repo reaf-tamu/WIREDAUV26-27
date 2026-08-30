@@ -1,6 +1,6 @@
 # ROS2 CLI reference
 
-A quick-lookup reference for the terminal commands you'll actually type while working on this project. For *why* topics/nodes/services exist conceptually, see the README's glossary; this doc is about the commands themselves.
+A quick-lookup reference for the terminal commands you'll type while working on this project.
 
 ## The general format
 
@@ -21,7 +21,7 @@ So `ros2 topic echo /vectornav/imu` breaks down as: category = `topic`, verb = `
 ```bash
 echo $ROS_DISTRO
 ```
-If that's empty, see `docs/jetson-setup.md` for the fix (should already be permanent in `~/.bashrc` on the team Jetson, but worth knowing what's going on if it ever isn't).
+If that's empty, see `docs/jetson-setup.md` for the fix (should already be permanent in `~/.bashrc` on the team Jetson).
 
 For anything running from this repo specifically (our own packages, custom message types), you also need to have sourced this workspace's build output — every terminal you use for `ros2 run`/`ros2 launch` on our packages should start with:
 ```bash
@@ -116,9 +116,9 @@ Not a `ros2` command — `colcon` is the separate build tool ROS2 projects use, 
 ```bash
 source ~/auv_ws/install/setup.bash
 ```
-This is a very common "why isn't my change showing up" trap — the build succeeded, but the currently-open terminal is still pointing at the old build output until re-sourced. Opening a fresh terminal after a build works too, as long as `source /opt/ros/humble/setup.bash` and this workspace's `install/setup.bash` are both in your shell's normal startup (check `~/.bashrc`).
+If you changed the code but it's not showing up, you probably forgot to re-source the the terminal. Opening a fresh terminal after a build works too, as long as `source /opt/ros/humble/setup.bash` and this workspace's `install/setup.bash` are both in your shell's normal startup (check `~/.bashrc`).
 
-**Reading build output:** a clean build ends with a `Summary:` line listing how many packages finished successfully. A failed package shows as `Failed <<< package_name` with the actual error just above it (often a Python traceback for our packages, or a CMake error for C++ ones); anything that depended on the failed package shows as `Aborted <<<` — that's not a separate bug, it's just colcon refusing to build something on top of a broken dependency.
+**Reading build output:** a clean build ends with a `Summary:` line listing how many packages finished successfully. A failed package shows as `Failed <<< package_name` with the error just above it (often a Python traceback for our packages, or a CMake error for C++ ones); anything that depended on the failed package shows as `Aborted <<<` since colcon refuses to build something on top of a broken dependency.
 
 ---
 
@@ -130,39 +130,3 @@ rosdep install --from-paths src --ignore-src -r -y
 Run from the workspace root, same as `colcon build`. Reads every package's `package.xml` and installs whatever system packages they declared as dependencies (e.g. `robot_localization`, `python3-serial`) via `apt`. Needed after cloning the repo fresh, or after adding a new dependency to a `package.xml`. Requires `ROS_DISTRO` to be set (see the top of this doc) or it'll fail to resolve almost everything.
 
 ---
-
-## The standard node `main()` pattern
-
-Every one of our nodes' `main()` functions follows the same five-step shape — worth recognizing once, since it shows up everywhere:
-
-```python
-def main(args=None):
-    rclpy.init(args=args)      # 1. start up ROS2's communication system
-    node = SomeNode()          # 2. create the node (only works after step 1)
-    try:
-        rclpy.spin(node)       # 3. keep it alive, running callbacks, until interrupted
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node()    # 4. clean up the node
-        rclpy.shutdown()       # 5. tear down ROS2's communication system
-```
-
-- **`rclpy.init()`** must run before anything else ROS2-related — creating a node, publishing, subscribing, none of it works until this has run once.
-- **`rclpy.spin(node)`** is what actually keeps the program running and responsive — it's what calls your subscription callbacks, timer callbacks, etc., in a loop, until the program is interrupted (`Ctrl+C`) or told to stop.
-- **`destroy_node()` / `shutdown()`** are cleanup, mirroring `init()`/creation in reverse. Skipping these, or calling `shutdown()` twice, can throw errors on exit (we hit exactly this once — see `docs/sensors/vn100.md`'s change history) — not usually dangerous, but worth keeping the pattern intact rather than improvising it.
-
----
-
-## A useful debugging sequence
-
-When something's not working and you're not sure where to start, this is roughly the order we've reached for repeatedly on this project:
-
-1. `ros2 node list` — is the node even running?
-2. `ros2 topic list | grep <keyword>` — does the topic exist?
-3. `ros2 topic hz <topic>` — is data actually flowing?
-4. `ros2 topic echo <topic> --once` — does the content look right?
-5. If a device/serial issue is suspected: `sudo fuser -v /dev/<device>` — is something else already holding the port open?
-
-Working through these roughly in order usually narrows down "is this a launch problem, a data problem, or a hardware problem" faster than jumping straight to reading source code.
-
