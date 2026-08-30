@@ -1,4 +1,4 @@
-# AUV Software
+# WIRED AUV Repository 2026-2027
 
 Welcome! This repository holds all the code that runs on our AUV (Autonomous Underwater Vehicle) — the robot submarine our club builds and programs for the RoboSub competition. It reads data from the vehicle's sensors, figures out where the vehicle is and which way it's pointing, and controls the thrusters to make it move on its own, without a person driving it.
 
