@@ -13,13 +13,28 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
-
+from launch_ros.actions import Node
+import math
 
 def generate_launch_description():
     vectornav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([FindPackageShare('vn100_driver'), 'launch', 'vn100.launch.py'])
         ])
+    )
+
+    vectornav_mount_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='vectornav_mount_tf',
+        arguments=[
+            '--x', '0', '--y', '0', '--z', '0',
+            '--roll', str(math.radians(-178)),
+            '--pitch', str(math.radians(-3)),
+            '--yaw', '0',
+            '--frame-id', 'base_link',
+            '--child-frame-id', 'vectornav',
+        ]
     )
 
     ping_sonar_launch = IncludeLaunchDescription(
@@ -56,6 +71,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         vectornav_launch,
+	vectornav_mount_tf,
         ping_sonar_launch,
         #zed_launch,
         localization_launch,
