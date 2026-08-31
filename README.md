@@ -1,6 +1,6 @@
 # WIRED AUV Repository 2026-2027
 
-Welcome! This repository holds all the code that runs on our AUV (Autonomous Underwater Vehicle) — the robot submarine our club builds and programs for the RoboSub competition. It reads data from the vehicle's sensors, figures out where the vehicle is and which way it's pointing, and controls the thrusters to make it move on its own, without a person driving it.
+Welcome! This repository holds all the code that runs on our AUV (Autonomous Underwater Vehicle) — the robot our club builds and programs for the annual RoboSub competition. It reads data from the vehicle's sensors, figures out where the vehicle is and which way it's pointing, and controls the thrusters to make it move on its own, without a person driving it.
 
 **New to the team, or new to ROS2/Git in general? Start at [`docs/concepts/ros-basics.md`](docs/concepts/ros-basics.md)** — every term used in this README is explained there. This document assumes you're already comfortable with that vocabulary and just need to find your way around.
 
@@ -42,7 +42,7 @@ You'll also see a few folders like `ping_sonar_ros`, `zed-ros2-wrapper`, and `yo
 | `docs/sensors/` | One page per sensor — what it does, how it's wired, how to run and calibrate it, troubleshooting. Start here if you're working on a specific sensor. |
 | `docs/concepts/` | Explains the *why* behind things we use — Kalman filters, PID control, quaternions, udev rules, basic ROS2/Git terminology. Read these when you want to understand a concept, not just run a command. |
 | `docs/references/` | Quick-lookup command sheets — common ROS2 CLI commands, the standard node code pattern, build/launch usage, git/GitHub commands. Read these when you know what you want to do and just need the exact command. |
-| `docs/issues/` | Deeper write-ups on open hardware/electrical decisions (e.g. USB power planning) — meant to be handed to whoever owns that decision. |
+| `docs/issues/` | Deeper write-ups on open decisions that require multiple sub-team or sub-task participation. |
 
 ---
 
