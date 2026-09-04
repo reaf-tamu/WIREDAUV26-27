@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+if [ -z "$ROS_DISTRO" ]; then
+  echo "ERROR: ROS_DISTRO is not set. Source ROS2 first:" >&2
+  echo "  source /opt/ros/humble/setup.bash" >&2
+  exit 1
+fi
+
 echo "Importing external driver repos..."
 vcs import . < dependencies.repos
 
