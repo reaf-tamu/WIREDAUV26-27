@@ -31,17 +31,22 @@ class PID:
 
         error = setpoint - measurement
 
-        p_term = self.kp * error
+        p_term = self.kp * error # react to how wrong right now
 
-        self._integral += error * dt
-        self._integral = max(self.integral_min, min(self.integral_max, self._integral))
+        self._integral += error * dt # react to how wrong we've been (error over time)
+        # integral can become huge if far from target for extended time
+        # accumulated sum doesn't vanish, can cause overshoot past the target
+        # fix by clamping integral term to max magnitude(called anti-windup) so don't have unreasonably large correction
+        self._integral = max(self.integral_min, min(self.integral_max, self._integral)) 
         i_term = self.ki * self._integral
 
         if self._prev_error is None:
             d_term = 0.0
         else:
-            d_term = self.kd * (error - self._prev_error) / dt
+            d_term = self.kd * (error - self._prev_error) / dt # reacts to how quickly error is changing
         self._prev_error = error
+        # acts as break, damping overshoot/oscillation that P and I cause
+        # con: amplifies noise badly!!
 
         output = p_term + i_term + d_term
         return max(self.output_min, min(self.output_max, output))
