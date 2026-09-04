@@ -37,26 +37,6 @@ from auv_msgs.msg import Setpoint
 
 from auv_control.pid import PID
 
-# declare and get parameters from yaml file
-self.declare_parameter('yaw_kp', 0.0)
-self.declare_parameter('yaw_ki', 0.0)
-self.declare_parameter('yaw_kd', 0.0)
-self.declare_parameter('depth_kp', 0.0)
-self.declare_parameter('depth_ki', 0.0)
-self.declare_parameter('depth_kd', 0.0)
-
-self.yaw_pid = PID(
-    kp=self.get_parameter('yaw_kp').value,
-    ki=self.get_parameter('yaw_ki').value,
-    kd=self.get_parameter('yaw_kd').value,
-    output_limits=(-1.0, 1.0)
-)
-self.depth_pid = PID(
-    kp=self.get_parameter('depth_kp').value,
-    ki=self.get_parameter('depth_ki').value,
-    kd=self.get_parameter('depth_kd').value,
-    output_limits=(-1.0, 1.0)
-)
 
 # data actual and ideal states are published to topic in quaternions, convert to meaningful yaw value
 def quaternion_to_yaw(q):
@@ -82,8 +62,26 @@ class AttitudeControlNode(Node):
         super().__init__('attitude_control_node')
 
         # TODO: placeholder gains (0 = loop does nothing)
-        self.yaw_pid = PID(kp=0.0, ki=0.0, kd=0.0, output_limits=(-1.0, 1.0))
-        self.depth_pid = PID(kp=0.0, ki=0.0, kd=0.0, output_limits=(-1.0, 1.0))
+        # declare and get parameters from yaml file
+        self.declare_parameter('yaw_kp', 0.0)
+        self.declare_parameter('yaw_ki', 0.0)
+        self.declare_parameter('yaw_kd', 0.0)
+        self.declare_parameter('depth_kp', 0.0)
+        self.declare_parameter('depth_ki', 0.0)
+        self.declare_parameter('depth_kd', 0.0)
+        
+        self.yaw_pid = PID(
+            kp=self.get_parameter('yaw_kp').value,
+            ki=self.get_parameter('yaw_ki').value,
+            kd=self.get_parameter('yaw_kd').value,
+            output_limits=(-1.0, 1.0)
+        )
+        self.depth_pid = PID(
+            kp=self.get_parameter('depth_kp').value,
+            ki=self.get_parameter('depth_ki').value,
+            kd=self.get_parameter('depth_kd').value,
+            output_limits=(-1.0, 1.0)
+        )
 
         self.current_yaw = 0.0
         self.current_depth = 0.0
