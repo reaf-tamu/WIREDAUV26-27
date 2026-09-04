@@ -37,14 +37,35 @@ from auv_msgs.msg import Setpoint
 
 from auv_control.pid import PID
 
+# declare and get parameters from yaml file
+self.declare_parameter('yaw_kp', 0.0)
+self.declare_parameter('yaw_ki', 0.0)
+self.declare_parameter('yaw_kd', 0.0)
+self.declare_parameter('depth_kp', 0.0)
+self.declare_parameter('depth_ki', 0.0)
+self.declare_parameter('depth_kd', 0.0)
 
+self.yaw_pid = PID(
+    kp=self.get_parameter('yaw_kp').value,
+    ki=self.get_parameter('yaw_ki').value,
+    kd=self.get_parameter('yaw_kd').value,
+    output_limits=(-1.0, 1.0)
+)
+self.depth_pid = PID(
+    kp=self.get_parameter('depth_kp').value,
+    ki=self.get_parameter('depth_ki').value,
+    kd=self.get_parameter('depth_kd').value,
+    output_limits=(-1.0, 1.0)
+)
+
+# data actual and ideal states are published to topic in quaternions, convert to meaningful yaw value
 def quaternion_to_yaw(q):
     """Extract yaw (rotation about Z) from a quaternion, in radians."""
     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
     cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     return math.atan2(siny_cosp, cosy_cosp)
 
-
+# make sure robot takes shortest correction path (1deg vs 359deg)
 def shortest_angle_diff(target, current):
     """Angle difference wrapped to [-pi, pi] -- without this, +179 deg and
     -179 deg would compute as a ~358 degree error instead of the real ~2."""
@@ -60,9 +81,7 @@ class AttitudeControlNode(Node):
     def __init__(self):
         super().__init__('attitude_control_node')
 
-        # TODO: placeholder gains (0 = loop does nothing). Tune on the bench
-        # once each axis has both verified sensor input AND verified
-        # actuation -- see docs/concepts/pid-control.md.
+        # TODO: placeholder gains (0 = loop does nothing)
         self.yaw_pid = PID(kp=0.0, ki=0.0, kd=0.0, output_limits=(-1.0, 1.0))
         self.depth_pid = PID(kp=0.0, ki=0.0, kd=0.0, output_limits=(-1.0, 1.0))
 
@@ -70,14 +89,11 @@ class AttitudeControlNode(Node):
         self.current_depth = 0.0
         self.setpoint_yaw = 0.0
         self.setpoint_depth = 0.0
-        self.surge_command = 0.0  # open-loop for now -- no surge sensor yet
+        self.surge_command = 0.0
 
         self.last_time = self.get_clock().now()
 
         self.create_subscription(Odometry, '/odometry/filtered', self.odom_callback, 10)
-        # NOTE: assumes auv_msgs/Setpoint has `desired_pose` (geometry_msgs/Pose)
-        # and `desired_velocity` (geometry_msgs/Twist) fields -- verify this
-        # against the actual message definition and adjust if it's changed.
         self.create_subscription(Setpoint, '/auv/setpoint', self.setpoint_callback, 10)
         self.wrench_pub = self.create_publisher(Wrench, '/auv/wrench', 10)
 
