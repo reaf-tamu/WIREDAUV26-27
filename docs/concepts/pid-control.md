@@ -89,7 +89,7 @@ Once `auv_control` is built out, it'll run **6 independent PID loops** — one e
 
 Those 6 corrections get combined into a single wrench (net force + torque) and passed through the thruster allocation matrix, which converts that wrench into individual thruster commands for our 8-thruster layout.
 
-We don't yet know which axes will need all three terms versus just PI — that's exactly the kind of thing that gets decided empirically once we're bench-testing the real vehicle in stage 3 of the roadmap, not something to guess at now. A reasonable expectation going in: depth (fighting a fairly constant, predictable buoyancy offset) is a likely candidate for needing a real I term to eliminate steady-state error, while an axis like yaw might turn out fine with less integral action if there's no comparable constant disturbance pushing on it.
+We don't yet know which axes will need all three terms versus just PI — that's the kind of thing that gets decided empirically once we're testing the vehicle. A reasonable expectation going in: depth (fighting a fairly constant, predictable buoyancy offset) is a likely candidate for needing a real I term to eliminate steady-state error, while an axis like yaw might turn out fine with less integral action if there's no comparable constant disturbance pushing on it.
 
 ## Resources to learn more
 
