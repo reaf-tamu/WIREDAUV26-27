@@ -61,7 +61,6 @@ class AttitudeControlNode(Node):
     def __init__(self):
         super().__init__('attitude_control_node')
 
-        # TODO: placeholder gains (0 = loop does nothing)
         # declare and get parameters from yaml file
         self.declare_parameter('yaw_kp', 0.0)
         self.declare_parameter('yaw_ki', 0.0)
@@ -99,10 +98,12 @@ class AttitudeControlNode(Node):
         # keeps dt well-defined even if a sensor briefly drops a message.
         self.timer = self.create_timer(0.05, self.control_loop)  # 20 Hz
 
+    # reads msg Odometry msg from topic (actual state according to sensors)
     def odom_callback(self, msg: Odometry):
         self.current_yaw = quaternion_to_yaw(msg.pose.pose.orientation)
         self.current_depth = msg.pose.pose.position.z
 
+    # reads Setpoint msg from topic (desired state according to mission logic)
     def setpoint_callback(self, msg: Setpoint):
         self.setpoint_yaw = quaternion_to_yaw(msg.desired_pose.orientation)
         self.setpoint_depth = msg.desired_pose.position.z
