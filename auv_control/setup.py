@@ -20,6 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'attitude_control_node = auv_control.attitude_control_node:main',
+            'thruster_allocator_node = auv_control.thruster_allocator_node:main',
+            'thruster_interface_node = auv_control.thruster_interface_node:main',
         ],
     },
 )
