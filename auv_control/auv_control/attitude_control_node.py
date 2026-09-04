@@ -1,24 +1,33 @@
 """
 attitude_control_node.py
 
-Runs the PID loops that are currently meaningful given our sensors.
+Runs the PID loops for all four attitude/depth axes. Sensor feedback and
+gains are wired up for all of them, but actuation readiness differs:
 
-  - yaw hold: REAL sensor feedback (VN-100 -> EKF). Yaw mixing is now
-    structured with real signs based on confirmed thruster positions (see
-    thruster_allocator_node.py), but still needs a bench test to confirm
-    the sign direction before this is trusted closed-loop. Gains below
-    default to 0 (does nothing) until that's done AND real tuning happens.
+  - yaw hold: REAL sensor feedback (VN-100 -> EKF), AND the allocator has
+    real (if still bench-unverified) yaw mixing -- see
+    thruster_allocator_node.py. Gains default to 0 (does nothing) until
+    that sign is bench-confirmed AND real tuning happens.
 
-  - depth hold: NOT usable yet -- no pressure sensor is wired in, so
-    /odometry/filtered's z is a meaningless placeholder right now. Written
-    and wired up so enabling it later is a one-line gain change, not a
-    rewrite.
+  - depth hold: real state placeholder only -- no pressure sensor wired
+    in yet, so /odometry/filtered's z means nothing right now. Heave
+    actuation DOES exist in the allocator (vertical thrusters move as one
+    group), so once a real depth sensor exists, enabling this is a
+    tuning exercise, not a rewrite.
 
-Roll, pitch, and sway are deliberately NOT implemented:
-  - roll/pitch: the 4 vertical thrusters' corner positions aren't
-    confirmed yet -- see docs and TODOs in thruster_allocator_node.py.
-  - sway: not physically possible with this thruster layout (differential
-    drive, no lateral thrust capability).
+  - roll hold / pitch hold: REAL sensor feedback (VN-100 -> EKF gives a
+    genuine roll/pitch estimate right now) -- but the allocator does NOT
+    yet mix torque.x/torque.y into anything. The 4 vertical thrusters'
+    corner positions aren't confirmed, so there's no known-good way to
+    drive them independently for roll/pitch. These PIDs are wired up and
+    will publish real torque.x/torque.y values once tuned, but the
+    allocator currently reads and silently ignores those fields -- so
+    tuning these before the allocator supports them has NO physical
+    effect yet. Do the allocator work first; this is just here so no
+    rewrite is needed once that's done.
+
+Sway is not implemented -- not physically possible with this thruster
+layout (differential drive, no lateral thrust capability).
 
 Subscribes:
   /odometry/filtered  (nav_msgs/Odometry)
@@ -45,6 +54,22 @@ def quaternion_to_yaw(q):
     cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     return math.atan2(siny_cosp, cosy_cosp)
 
+
+def quaternion_to_roll(q):
+    """Extract roll (rotation about X) from a quaternion, in radians."""
+    sinr_cosp = 2.0 * (q.w * q.x + q.y * q.z)
+    cosr_cosp = 1.0 - 2.0 * (q.x * q.x + q.y * q.y)
+    return math.atan2(sinr_cosp, cosr_cosp)
+
+
+def quaternion_to_pitch(q):
+    """Extract pitch (rotation about Y) from a quaternion, in radians."""
+    sinp = 2.0 * (q.w * q.y - q.z * q.x)
+    sinp = max(-1.0, min(1.0, sinp))  # clamp -- guards against tiny float
+    # errors pushing this a hair outside asin()'s valid [-1, 1] domain
+    return math.asin(sinp)
+
+
 # make sure robot takes shortest correction path (1deg vs 359deg)
 def shortest_angle_diff(target, current):
     """Angle difference wrapped to [-pi, pi] -- without this, +179 deg and
@@ -62,13 +87,31 @@ class AttitudeControlNode(Node):
         super().__init__('attitude_control_node')
 
         # declare and get parameters from yaml file
+        self.declare_parameter('roll_kp', 0.0)
+        self.declare_parameter('roll_ki', 0.0)
+        self.declare_parameter('roll_kd', 0.0)
+        self.declare_parameter('pitch_kp', 0.0)
+        self.declare_parameter('pitch_ki', 0.0)
+        self.declare_parameter('pitch_kd', 0.0)
         self.declare_parameter('yaw_kp', 0.0)
         self.declare_parameter('yaw_ki', 0.0)
         self.declare_parameter('yaw_kd', 0.0)
         self.declare_parameter('depth_kp', 0.0)
         self.declare_parameter('depth_ki', 0.0)
         self.declare_parameter('depth_kd', 0.0)
-        
+
+        self.roll_pid = PID(
+            kp=self.get_parameter('roll_kp').value,
+            ki=self.get_parameter('roll_ki').value,
+            kd=self.get_parameter('roll_kd').value,
+            output_limits=(-1.0, 1.0)
+        )
+        self.pitch_pid = PID(
+            kp=self.get_parameter('pitch_kp').value,
+            ki=self.get_parameter('pitch_ki').value,
+            kd=self.get_parameter('pitch_kd').value,
+            output_limits=(-1.0, 1.0)
+        )
         self.yaw_pid = PID(
             kp=self.get_parameter('yaw_kp').value,
             ki=self.get_parameter('yaw_ki').value,
@@ -82,8 +125,12 @@ class AttitudeControlNode(Node):
             output_limits=(-1.0, 1.0)
         )
 
+        self.current_roll = 0.0
+        self.current_pitch = 0.0
         self.current_yaw = 0.0
         self.current_depth = 0.0
+        self.setpoint_roll = 0.0
+        self.setpoint_pitch = 0.0
         self.setpoint_yaw = 0.0
         self.setpoint_depth = 0.0
         self.surge_command = 0.0
@@ -100,11 +147,15 @@ class AttitudeControlNode(Node):
 
     # reads msg Odometry msg from topic (actual state according to sensors)
     def odom_callback(self, msg: Odometry):
+        self.current_roll = quaternion_to_roll(msg.pose.pose.orientation)
+        self.current_pitch = quaternion_to_pitch(msg.pose.pose.orientation)
         self.current_yaw = quaternion_to_yaw(msg.pose.pose.orientation)
         self.current_depth = msg.pose.pose.position.z
 
     # reads Setpoint msg from topic (desired state according to mission logic)
     def setpoint_callback(self, msg: Setpoint):
+        self.setpoint_roll = quaternion_to_roll(msg.desired_pose.orientation)
+        self.setpoint_pitch = quaternion_to_pitch(msg.desired_pose.orientation)
         self.setpoint_yaw = quaternion_to_yaw(msg.desired_pose.orientation)
         self.setpoint_depth = msg.desired_pose.position.z
         self.surge_command = msg.desired_velocity.linear.x
@@ -116,6 +167,12 @@ class AttitudeControlNode(Node):
         if dt <= 0.0:
             return
 
+        roll_error = shortest_angle_diff(self.setpoint_roll, self.current_roll)
+        roll_output = self.roll_pid.update(setpoint=0.0, measurement=-roll_error, dt=dt)
+
+        pitch_error = shortest_angle_diff(self.setpoint_pitch, self.current_pitch)
+        pitch_output = self.pitch_pid.update(setpoint=0.0, measurement=-pitch_error, dt=dt)
+
         yaw_error = shortest_angle_diff(self.setpoint_yaw, self.current_yaw)
         yaw_output = self.yaw_pid.update(setpoint=0.0, measurement=-yaw_error, dt=dt)
 
@@ -126,8 +183,12 @@ class AttitudeControlNode(Node):
         wrench.force.x = self.surge_command   # open-loop, see class docstring
         wrench.force.y = 0.0                  # sway not achievable
         wrench.force.z = depth_output
-        wrench.torque.x = 0.0                 # roll not implemented
-        wrench.torque.y = 0.0                 # pitch not implemented
+        # NOTE: torque.x/torque.y are real PID output now, but the
+        # allocator doesn't mix them into anything yet -- see class
+        # docstring. Publishing nonzero values here currently has NO
+        # physical effect until that's added.
+        wrench.torque.x = roll_output
+        wrench.torque.y = pitch_output
         wrench.torque.z = yaw_output
 
         self.wrench_pub.publish(wrench)
