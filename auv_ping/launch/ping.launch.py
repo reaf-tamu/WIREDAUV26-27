@@ -14,6 +14,7 @@ def generate_launch_description():
                 'baud': 115200,
                 'frame_id': 'ping1d',
                 'rate_hz': 10.0,
+		'min_confidence': 50, #adjust after pool test
             }]
         )
     ])

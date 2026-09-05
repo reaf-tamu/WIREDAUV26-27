@@ -39,7 +39,7 @@ def generate_launch_description():
 
     ping_sonar_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
-            PathJoinSubstitution([FindPackageShare('ping_sonar_ros'), 'launch', 'ping_sonar.launch.py'])
+            PathJoinSubstitution([FindPackageShare('auv_ping'), 'launch', 'ping.launch.py'])
         ])
     )
 

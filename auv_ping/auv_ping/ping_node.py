@@ -4,16 +4,25 @@ Minimal driver for the Blue Robotics Ping Sonar, using Blue Robotics' own
 official 'bluerobotics-ping' PyPI package (brping) directly -- not the
 upstream ping_sonar_ros ROS2 wrapper.
 
-We only need one number (altitude above the floor), so this skips
-ping_sonar_ros's git submodule, its self-import PYTHONPATH quirk, and its
-bundled RViz launch dependency entirely, in favor of just calling Blue
-Robotics' already-written, already-tested library function directly and
-publishing the result.
-
 This is a request/response protocol, not a continuous stream like the
 VN-100's ASCII sentences -- get_distance() actively asks the sensor for a
 fresh reading and waits for a response, so this runs on a timer rather
 than a tight read loop.
+
+Every reading comes with a 'confidence' percentage (0-100) from the
+sensor itself -- a built-in signal-quality indicator, separate from
+distance. This matters a lot in practice: sonar readings can look like
+plausible numbers while actually being unreliable (bad target angle,
+scattering off a soft/uneven surface, air testing, etc.), and confidence
+is the sensor's own way of flagging that before you trust the number.
+
+  - Every reading's confidence is published on /ping1d/confidence
+    (std_msgs/Float32, 0-100), regardless of value -- so it's always
+    visible for logging/debugging even if you don't act on it downstream.
+  - Only readings at or above 'min_confidence' actually get published on
+    /ping1d/range. Below-threshold readings are silently dropped (counted
+    in bad_reads, logged at intervals) rather than passed downstream as
+    if they were trustworthy.
 
 NOTE: min_range/max_range/field_of_view below are approximate, taken from
 general Ping1D documentation, not independently verified against the
@@ -25,6 +34,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Range
+from std_msgs.msg import Float32
 
 try:
     from brping import Ping1D
@@ -41,7 +51,13 @@ class PingNode(Node):
         self.declare_parameter('baud', 115200)
         self.declare_parameter('frame_id', 'ping1d')
         self.declare_parameter('rate_hz', 10.0)
-        # TODO: verify these three against the actual Ping1D datasheet.
+        # Readings below this confidence (0-100, from the sensor itself)
+        # are dropped rather than published on /ping1d/range. Start
+        # conservative; loosen only after real-water testing shows it's
+        # unnecessarily strict.
+        self.declare_parameter('min_confidence', 50)
+        # TODO: verify these three against the actual Ping1D/Ping2 datasheet
+        # for our specific unit.
         self.declare_parameter('min_range_m', 0.5)
         self.declare_parameter('max_range_m', 30.0)
         self.declare_parameter('field_of_view_rad', 0.5236)  # ~30 degrees
@@ -49,14 +65,17 @@ class PingNode(Node):
         port = self.get_parameter('port').value
         baud = self.get_parameter('baud').value
         self.frame_id = self.get_parameter('frame_id').value
+        self.min_confidence = self.get_parameter('min_confidence').value
         self.min_range_m = self.get_parameter('min_range_m').value
         self.max_range_m = self.get_parameter('max_range_m').value
         self.field_of_view_rad = self.get_parameter('field_of_view_rad').value
         rate_hz = self.get_parameter('rate_hz').value
 
-        self.pub = self.create_publisher(Range, '/ping1d/range', qos_profile_sensor_data)
+        self.range_pub = self.create_publisher(Range, '/ping1d/range', qos_profile_sensor_data)
+        self.confidence_pub = self.create_publisher(Float32, '/ping1d/confidence', qos_profile_sensor_data)
 
         self.good_reads = 0
+        self.low_confidence_reads = 0
         self.bad_reads = 0
 
         self.ping = None
@@ -92,8 +111,25 @@ class PingNode(Node):
             return
 
         result = self.ping.get_distance()
-        if not result or 'distance' not in result:
+        if not result or 'distance' not in result or 'confidence' not in result:
             self.bad_reads += 1
+            return
+
+        confidence = result['confidence']
+
+        # Publish confidence for every reading, regardless of value -- always
+        # visible for logging/debugging even when the range itself gets dropped.
+        confidence_msg = Float32()
+        confidence_msg.data = float(confidence)
+        self.confidence_pub.publish(confidence_msg)
+
+        if confidence < self.min_confidence:
+            self.low_confidence_reads += 1
+            if self.low_confidence_reads % 20 == 1:  # don't spam every single one
+                self.get_logger().warn(
+                    f'Dropping low-confidence reading: {confidence}% '
+                    f'(threshold: {self.min_confidence}%). '
+                    f'{self.low_confidence_reads} dropped so far.')
             return
 
         self.good_reads += 1
@@ -107,7 +143,7 @@ class PingNode(Node):
         msg.max_range = self.max_range_m
         msg.range = result['distance'] / 1000.0  # brping reports mm; ROS wants meters
 
-        self.pub.publish(msg)
+        self.range_pub.publish(msg)
 
 
 def main(args=None):
@@ -119,7 +155,9 @@ def main(args=None):
         pass
     finally:
         node.get_logger().info(
-            f'Shutting down. Good reads: {node.good_reads}, bad reads: {node.bad_reads}'
+            f'Shutting down. Good reads: {node.good_reads}, '
+            f'low-confidence dropped: {node.low_confidence_reads}, '
+            f'bad reads: {node.bad_reads}'
         )
         node.destroy_node()
         if rclpy.ok():
