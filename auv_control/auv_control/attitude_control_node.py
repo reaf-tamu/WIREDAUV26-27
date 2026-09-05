@@ -167,8 +167,6 @@ class AttitudeControlNode(Node):
 
         self.create_subscription(Odometry, '/odometry/filtered', self.odom_callback, 10)
         self.create_subscription(Setpoint, '/auv/setpoint', self.setpoint_callback, 10)
-        # TODO: confirm this is the real ping_sonar_ros topic name once that
-        # driver is actually running -- check with `ros2 topic list`.
         self.create_subscription(Range, '/ping1d/range', self.range_callback, 10)
         self.wrench_pub = self.create_publisher(Wrench, '/auv/wrench', 10)
 
