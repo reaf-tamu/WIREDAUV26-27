@@ -237,8 +237,8 @@ class AttitudeControlNode(Node):
         wrench.force.x = surge_output
         wrench.force.y = 0.0                  # sway not achievable
         wrench.force.z = vertical_output
-        wrench.torque.x = roll_output         # allocator doesn't use this yet
-        wrench.torque.y = pitch_output        # allocator doesn't use this yet
+        wrench.torque.x = roll_output         
+        wrench.torque.y = pitch_output        
         wrench.torque.z = yaw_output
 
         self.wrench_pub.publish(wrench)
