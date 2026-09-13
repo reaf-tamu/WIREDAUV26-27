@@ -37,11 +37,11 @@ def generate_launch_description():
         ]
     )
 
-    ping_sonar_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([FindPackageShare('auv_ping'), 'launch', 'ping.launch.py'])
-        ])
-    )
+    # ping_sonar_launch = IncludeLaunchDescription(
+    #    PythonLaunchDescriptionSource([
+    #        PathJoinSubstitution([FindPackageShare('auv_ping'), 'launch', 'ping.launch.py'])
+    #    ])
+    #)
 
     # TODO: ZED SDK not installed yet. Uncomment once set up
     #zed_launch = IncludeLaunchDescription(
@@ -72,7 +72,7 @@ def generate_launch_description():
     return LaunchDescription([
         vectornav_launch,
 	vectornav_mount_tf,
-        ping_sonar_launch,
+        #ping_sonar_launch,
         #zed_launch,
         localization_launch,
     ])
