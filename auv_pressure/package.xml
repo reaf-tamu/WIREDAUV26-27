@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>auv_pressure</name>
+  <version>0.0.1</version>
+  <description>
+    Driver for the Blue Robotics Bar02 pressure/depth sensor (MS5837-02BA,
+    I2C), using Blue Robotics' own official ms5837-python library directly
+    (installed via pip from GitHub, not vendored as a git submodule).
+    Publishes depth as PoseWithCovarianceStamped on /localization/depth_pose,
+    matching the pose0 placeholder already stubbed in auv_localization's
+    ekf.yaml.
+  </description>
+  <maintainer email="reaf-tamu@gmail.com">WIRED_AUV</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <!-- ms5837-python is pip-only (installed via git+https, not on PyPI/apt) --
+       see docs/sensors/pressure-sensor.md for the install step. -->
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
