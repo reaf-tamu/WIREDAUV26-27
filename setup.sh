@@ -10,6 +10,11 @@ fi
 echo "Importing external driver repos..."
 vcs import . < dependencies.repos
 
+echo "Skipping zed-ros2-wrapper build by default (requires the real ZED SDK,"
+echo "which is proprietary/GPU-dependent and can't be auto-installed here)."
+echo "Once the SDK is installed, remove the ignore: rm zed-ros2-wrapper/COLCON_IGNORE"
+touch zed-ros2-wrapper/COLCON_IGNORE
+
 if ! command -v pip3 &> /dev/null; then
   echo "python3-pip not found -- installing..."
   sudo apt install -y python3-pip
