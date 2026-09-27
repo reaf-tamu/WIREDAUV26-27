@@ -22,7 +22,7 @@ NEUTRAL = 90.0
 # Channel assignments -- copied directly from the original motors.py.
 CHANNELS = {
     'a1': 12, 'a2': 13, 'a3': 14, 'a4': 15,
-    'm1': 2, 'm2': 3, 'm3': 4, 'm4': 5,
+    'm1': 8, 'm2': 9, 'm3': 10, 'm4': 11,
 }
 
 
