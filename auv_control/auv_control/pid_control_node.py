@@ -1,5 +1,5 @@
 """
-attitude_control_node.py
+pid_control_node.py
 
 Runs the PID loops for all attitude/depth/altitude/surge axes. Sensor
 feedback and gains are wired up for all of them, but actuation/sensor
@@ -88,9 +88,9 @@ def shortest_angle_diff(target, current):
     return diff
 
 
-class AttitudeControlNode(Node):
+class PIDControlNode(Node):
     def __init__(self):
-        super().__init__('attitude_control_node')
+        super().__init__('pid_control_node')
 
         # default parameter values (set to 0)
         self.declare_parameter('roll_kp', 0.0)
@@ -258,7 +258,7 @@ class AttitudeControlNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = AttitudeControlNode()
+    node = PIDControlNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
