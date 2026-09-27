@@ -27,6 +27,7 @@ setup(
             'attitude_control_node = auv_control.attitude_control_node:main',
             'thruster_allocator_node = auv_control.thruster_allocator_node:main',
             'thruster_interface_node = auv_control.thruster_interface_node:main',
+            'publish_setpoint = auv_control.publish_setpoint:main',
         ],
     },
 )
