@@ -56,7 +56,7 @@ from auv_msgs.msg import Setpoint
 
 from auv_control.pid import PID
 
-
+# converts quaternions to each euler angle
 def quaternion_to_yaw(q):
     """Extract yaw (rotation about Z) from a quaternion, in radians."""
     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
@@ -77,7 +77,7 @@ def quaternion_to_pitch(q):
     sinp = max(-1.0, min(1.0, sinp))
     return math.asin(sinp)
 
-
+# ensures robot takes shortest angle path (2 degrees vs 358 degrees)
 def shortest_angle_diff(target, current):
     """Angle difference wrapped to [-pi, pi]."""
     diff = target - current
@@ -92,6 +92,7 @@ class AttitudeControlNode(Node):
     def __init__(self):
         super().__init__('attitude_control_node')
 
+        # default parameter values (set to 0)
         self.declare_parameter('roll_kp', 0.0)
         self.declare_parameter('roll_ki', 0.0)
         self.declare_parameter('roll_kd', 0.0)
@@ -111,6 +112,7 @@ class AttitudeControlNode(Node):
         self.declare_parameter('surge_ki', 0.0)
         self.declare_parameter('surge_kd', 0.0)
 
+        # read parameters from yaml file
         self.roll_pid = PID(
             kp=self.get_parameter('roll_kp').value,
             ki=self.get_parameter('roll_ki').value,
@@ -148,6 +150,7 @@ class AttitudeControlNode(Node):
             output_limits=(-1.0, 1.0)
         )
 
+        # actual values (initialize to 0)
         self.current_roll = 0.0
         self.current_pitch = 0.0
         self.current_yaw = 0.0
@@ -155,6 +158,7 @@ class AttitudeControlNode(Node):
         self.current_altitude = 0.0  # from sonar directly, NOT the EKF
         self.current_surge_velocity = 0.0  # from EKF twist -- meaningless until DVL is fused in
 
+        # target values (initialize to 0)
         self.setpoint_roll = 0.0
         self.setpoint_pitch = 0.0
         self.setpoint_yaw = 0.0
@@ -165,20 +169,25 @@ class AttitudeControlNode(Node):
 
         self.last_time = self.get_clock().now()
 
+        # subscribe to odometry, where current positions are published
         self.create_subscription(Odometry, '/odometry/filtered', self.odom_callback, 10)
+        # subscribe to setpoint, where target positions are published
         self.create_subscription(Setpoint, '/auv/setpoint', self.setpoint_callback, 10)
+        # subscribe to pinger data, since odometry only in
         self.create_subscription(Range, '/ping1d/range', self.range_callback, 10)
         self.wrench_pub = self.create_publisher(Wrench, '/auv/wrench', 10)
 
         self.timer = self.create_timer(0.05, self.control_loop)  # 20 Hz
-
+      
+    # callback functions called when data arrives on the topic
+    # stores all important fields in msg for program to use
     def odom_callback(self, msg: Odometry):
         self.current_roll = quaternion_to_roll(msg.pose.pose.orientation)
         self.current_pitch = quaternion_to_pitch(msg.pose.pose.orientation)
         self.current_yaw = quaternion_to_yaw(msg.pose.pose.orientation)
         self.current_depth = msg.pose.pose.position.z
         self.current_surge_velocity = msg.twist.twist.linear.x
-
+      
     def range_callback(self, msg: Range):
         # Altitude comes straight from the sonar -- deliberately never
         # touches the EKF. See module docstring for why.
@@ -204,6 +213,7 @@ class AttitudeControlNode(Node):
         if dt <= 0.0:
             return
 
+        # PID outputs scale of -1 to 1, indicating how to push value in given direction
         roll_error = shortest_angle_diff(self.setpoint_roll, self.current_roll)
         roll_output = self.roll_pid.update(setpoint=0.0, measurement=-roll_error, dt=dt)
 
@@ -233,6 +243,8 @@ class AttitudeControlNode(Node):
                 measurement=self.current_depth, dt=dt)
             self.altitude_pid.reset()
 
+        # Wrench is build in msg, not the best naming convention for what we are using, maybe make a custom msg at some point
+        # use Wrench to send PID outputs onto topic for thruster allocation
         wrench = Wrench()
         wrench.force.x = surge_output
         wrench.force.y = 0.0                  # sway not achievable
