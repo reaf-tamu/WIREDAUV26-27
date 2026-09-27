@@ -67,10 +67,6 @@ YAW_GAIN_DEG = 10.0
 ROLL_GAIN_DEG = 10.0
 PITCH_GAIN_DEG = 10.0
 
-YAW_MIXING_VERIFIED = False    # bench test yaw before flipping this
-ROLL_MIXING_VERIFIED = False   # bench test roll before flipping this
-PITCH_MIXING_VERIFIED = False  # bench test pitch before flipping this
-
 SURGE_SIGN = {'A1': -1, 'A4': -1, 'M1': +1, 'M4': +1}
 YAW_SIGN = {'A1': -1, 'A4': -1, 'M1': +1, 'M4': +1}
 
@@ -93,12 +89,13 @@ class ThrusterAllocatorNode(Node):
         self.create_subscription(Wrench, '/auv/wrench', self.wrench_callback, 10)
         self.pub = self.create_publisher(ThrusterCommands, '/auv/thruster_commands', 10)
 
+    # gets PID output  
     def wrench_callback(self, msg: Wrench):
         surge = msg.force.x
         heave = msg.force.z
-        yaw = msg.torque.z if YAW_MIXING_VERIFIED else 0.0
-        roll = msg.torque.x if ROLL_MIXING_VERIFIED else 0.0
-        pitch = msg.torque.y if PITCH_MIXING_VERIFIED else 0.0
+        yaw = msg.torque.z
+        roll = msg.torque.x
+        pitch = msg.torque.y
 
         cmd = ThrusterCommands()
 
