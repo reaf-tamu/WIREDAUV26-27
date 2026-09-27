@@ -20,6 +20,14 @@ if ! command -v pip3 &> /dev/null; then
   sudo apt install -y python3-pip
 fi
 
+
+# Some rosdep-driven pip installs (e.g. yolo_ros's torch/torchvision) can pull
+# in a setuptools version too new for colcon, breaking every build afterward
+# with "canonicalize_version() got an unexpected keyword argument". Pin it
+# proactively so this can't recur.
+pip3 install "setuptools<80" --quiet
+
+
 echo "Installing ROS dependencies..."
 cd ..
 rosdep install --from-paths src --ignore-src -r -y
