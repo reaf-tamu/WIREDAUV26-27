@@ -7,11 +7,11 @@ PID control loops and thruster allocation — takes the vehicle's current state 
 | File | Role |
 |---|---|
 | `auv_control/pid.py` | Generic, reusable PID controller class. See `docs/concepts/pid-control.md` for what each term does. |
-| `auv_control/attitude_control_node.py` | Runs all 6 PID loops (roll, pitch, yaw, depth, altitude, surge). Reads `/odometry/filtered` + `/ping1d/range` + `/auv/setpoint`, publishes `/auv/wrench`. |
+| `auv_control/pid_control_node.py` | Runs all 6 PID loops (roll, pitch, yaw, depth, altitude, surge). Reads `/odometry/filtered` + `/ping1d/range` + `/auv/setpoint`, publishes `/auv/wrench`. |
 | `auv_control/thruster_allocator_node.py` | Converts a `Wrench` into 8 individual thruster angle commands, based on confirmed thruster positions. Reads `/auv/wrench`, publishes `/auv/thruster_commands`. |
 | `auv_control/thruster_interface_node.py` | The only node that actually talks to hardware — drives the PCA9685 servo/ESC board. Reads `/auv/thruster_commands`. |
 | `config/pid_gains.yaml` | All tunable PID gains. Edit this to tune, not the Python code. |
-| `launch/attitude_control.launch.py` | Launches `attitude_control_node` with `pid_gains.yaml` loaded. |
+| `launch/control.launch.py` | Launches `pid_control_node` with `pid_gains.yaml` loaded. |
 
 ## Thruster layout
 
@@ -51,18 +51,16 @@ Full stack (with sensors):
 ```bash
 ros2 launch auv_bringup bringup.launch.py
 ```
-Then, in separate terminals (not yet folded into `bringup.launch.py`):
+Then, in a separate terminal (not yet folded into `bringup.launch.py`):
 ```bash
-ros2 launch auv_control attitude_control.launch.py
-ros2 run auv_control thruster_allocator_node
-ros2 run auv_control thruster_interface_node
+ros2 launch auv_control pid_control.launch.py
 ```
 
 `thruster_interface_node` will attempt to arm the ESCs on startup — listen for two beeps, same as the original hardcoded script.
 
 ## Tuning
 
-Edit `config/pid_gains.yaml`, then restart `attitude_control_node` — no rebuild needed for a YAML-only change. Full step-by-step tuning procedure, safety checklist, and unit gotchas (radians for angles, meters for altitude) are written up separately — ask whoever ran the last tuning session, or check the relevant sensor doc's tuning log (`docs/sensors/vn100.md`, `docs/sensors/ping-sonar.md`) for prior results before starting from scratch.
+Edit `config/pid_gains.yaml`, then restart `pid_control_node` — no rebuild needed for a YAML-only change. Full step-by-step tuning procedure, safety checklist, and unit gotchas (radians for angles, meters for altitude) are written up separately — ask whoever ran the last tuning session, or check the relevant sensor doc's tuning log (`docs/sensors/vn100.md`, `docs/sensors/ping-sonar.md`) for prior results before starting from scratch.
 
 ## Manual testing without a mission running
 
