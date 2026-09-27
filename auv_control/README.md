@@ -35,15 +35,14 @@ A-side and M-side thrusters are mounted with mirrored prop orientation — this 
 
 | DOF | Sensor feedback | Actuation | Status |
 |---|---|---|---|
-| Yaw | Real (VN-100 → EKF) | Real, structure known | Bench sign check required before use — see `YAW_MIXING_VERIFIED` |
-| Altitude | Real (Ping Sonar, direct — not via EKF) | Real (heave group) | Bench sign check recommended for the new code path — see `docs/sensors/vn100.md`/`ping-sonar.md` tuning logs |
-| Roll | Real (VN-100 → EKF) | Real, structure known | Bench sign check required — see `ROLL_MIXING_VERIFIED` |
-| Pitch | Real (VN-100 → EKF) | Real, structure known | Bench sign check required — see `PITCH_MIXING_VERIFIED` |
+| Yaw | Real (VN-100 → EKF) | Real, structure known | Unverified |
+| Altitude | Real (Ping Sonar, direct — not via EKF) | Real (heave group) | Unverified |
+| Roll | Real (VN-100 → EKF) | Real, structure known | Unverified |
+| Pitch | Real (VN-100 → EKF) | Real, structure known | Unverified |
 | Depth | **Not yet** — no pressure sensor wired into the EKF | Real (heave group, shared with altitude) | Not usable until pressure sensor exists |
 | Surge | **Not yet** — no DVL fused into the EKF | Real | Only open-loop possible until DVL exists |
 | Sway | N/A | **Not physically possible** with this thruster layout | Not implemented |
 
-**Every one of the "structure known, bench sign check required" loops is gated by a `_MIXING_VERIFIED` flag in `thruster_allocator_node.py`, defaulting to `False`.** This means the PID computes a real, correct-shaped output, but the allocator silently zeroes it out until someone has physically confirmed the direction is right and flipped the flag. This is deliberate — see that file's docstring for the exact bench-test procedure. **Never flip a `_MIXING_VERIFIED` flag without having actually done the corresponding physical test.**
 
 ## Running it
 
@@ -83,7 +82,7 @@ ros2 run auv_control publish_setpoint <roll|pitch|yaw> <degrees offset>
 
 ## Known limitations
 
-- Roll/pitch/yaw sign conventions are structurally correct but not all bench-verified yet — check each `_MIXING_VERIFIED` flag's current state before assuming a loop is live.
+
 - Depth and surge have no real sensor feedback yet (pressure sensor and DVL respectively, neither wired into the EKF as of this writing).
 - Sway is not achievable with the current thruster layout — see `docs/issues/` for the team's mounting/vectored-thruster discussion if this becomes a priority.
 - `auv_msgs/Setpoint`'s `use_altitude_hold` flag repurposes `desired_pose.position.z` to mean "desired altitude" rather than "desired depth" when set — a slightly unusual overload worth remembering rather than assuming based on the field name alone.
