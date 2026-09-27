@@ -66,12 +66,15 @@ Edit `config/pid_gains.yaml`, then restart `attitude_control_node` — no rebuil
 
 ## Manual testing without a mission running
 
-Publish a wrench directly to test the allocator/thrusters in isolation:
+Publish a wrench directly to test the allocator/thrusters in isolation (no sensors/PID needed):
 ```bash
 ros2 topic pub /auv/wrench geometry_msgs/msg/Wrench "{force: {x: 0.5}}" --once
 ```
 
-Publishing a real `Setpoint` by hand requires a quaternion, which is painful to type manually — small helper scripts exist for this (ask around, or check recent tuning session notes) rather than hand-constructing one from `ros2 topic pub`.
+Publish a Setpoint offset from the current orientation for manual PID testing:
+```bash
+ros2 run auv_control publish_setpoint <roll|pitch|yaw> <degrees offset>
+```
 
 ## Safety notes
 
