@@ -30,6 +30,7 @@ class ThrusterInterfaceNode(Node):
     def __init__(self):
         super().__init__('thruster_interface_node')
 
+        # check that servo kit is installed, otherwise PCA9685 can't communicate with thrusters
         if HARDWARE_AVAILABLE:
             self.kit = ServoKit(channels=16)
             self.get_logger().info('PCA9685 detected, driving real hardware.')
@@ -41,6 +42,7 @@ class ThrusterInterfaceNode(Node):
         self._last_sent = {name: None for name in CHANNELS}
         self.initialize_escs()
 
+        # subscribes to thruster commands
         self.create_subscription(
             ThrusterCommands, '/auv/thruster_commands', self.command_callback, 10)
 
@@ -51,12 +53,14 @@ class ThrusterInterfaceNode(Node):
             self._send(name, NEUTRAL)
 
     def _send(self, name, angle):
+        # if no change in commmand, don't send to thrusters
         if self._last_sent[name] == angle:
             return
         self._last_sent[name] = angle
         if self.kit is not None:
-            self.kit.servo[CHANNELS[name]].angle = angle
+            self.kit.servo[CHANNELS[name]].angle = angle # send new command to thrusters
 
+    # send command on auv/thruster_commands to thrusters
     def command_callback(self, msg: ThrusterCommands):
         self._send('a1', msg.a1)
         self._send('a2', msg.a2)
@@ -67,6 +71,7 @@ class ThrusterInterfaceNode(Node):
         self._send('m3', msg.m3)
         self._send('m4', msg.m4)
 
+    # STOPS ALL THRUSTERS when this node quits (thrusters should never be left running
     def destroy_node(self):
         # Safety: return every thruster to neutral on shutdown, unlike the
         # original script, which only stopped motors on a normal mission
