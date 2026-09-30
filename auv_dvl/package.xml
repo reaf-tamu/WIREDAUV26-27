@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>auv_dvl</name>
+  <version>0.0.1</version>
+  <description>
+    Driver for the Teledyne Wayfinder DVL, using Teledyne's own official
+    Python driver directly (confirmed working via a standalone Windows/VM
+    test -- see auv_dvl/README.md for that test's notes), wrapped in a
+    minimal ROS2 node. Publishes velocity as nav_msgs/Odometry on
+    /dvl/odometry, matching the odom0 placeholder already stubbed
+    (commented out) in auv_localization/config/ekf.yaml.
+  </description>
+  <maintainer email="reaf-tamu@gmail.com">WIRED_AUV</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <!-- Teledyne's "dvl" Python driver is a vendor download, not a public
+       PyPI/git package -- see README.md for the install step. -->
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
