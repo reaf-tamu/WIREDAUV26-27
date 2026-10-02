@@ -19,6 +19,7 @@ A **DVL (Doppler Velocity Log)** measures the vehicle's velocity relative to the
 | Baud rate | 115200 |
 | Driver | Teledyne's own official Python SDK (`dvl` package) — vendor download, not on PyPI |
 | Driver repo | Custom — `auv_dvl` (this repo), wrapping Teledyne's SDK directly |
+| Data Sheet | https://www.teledynemarine.com/en-us/products/SiteAssets/RD%20Instruments/Wayfinder_DVL_Guide.pdf |
 
 ---
 
