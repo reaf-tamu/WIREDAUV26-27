@@ -6,7 +6,7 @@ def show_data(data, obj):
 dvl = Dvl()
 
 print("Connecting...")
-if not dvl.connect("COM3", 115200):
+if not dvl.connect("/dev/ttyUSB0", 115200):
     print("Could not connect:", dvl.last_err)
     raise SystemExit
 
