@@ -42,7 +42,7 @@ class DvlNode(Node):
     def __init__(self):
         super().__init__('dvl_node')
 
-        self.declare_parameter('port', '/dev/dvl')
+        self.declare_parameter('port', '/dev/ttyUSB0')
         self.declare_parameter('baud', 115200)
         self.declare_parameter('frame_id', 'dvl')
 
