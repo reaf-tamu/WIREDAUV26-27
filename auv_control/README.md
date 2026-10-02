@@ -19,14 +19,14 @@ Confirmed physical positions (sitting in the vehicle facing forward):
 
 **Horizontal (surge/yaw):**
 ```
-A1 = back-left    A4 = front-left
-M1 = back-right   M4 = front-right
+A1 = bottom back-left    A4 = bottom front-left
+M1 = bottom back-right   M4 = bottom front-right
 ```
 
 **Vertical (heave/roll/pitch):**
 ```
-A3 = front-left   A2 = back-left
-M3 = front-right  M2 = back-right
+A3 = top front-left   A2 = top back-left
+M3 = top front-right  M2 = top back-right
 ```
 
 A-side and M-side thrusters are mounted with mirrored prop orientation — this is why `SURGE_SIGN` in the allocator gives A and M thrusters opposite signs for the same commanded surge, even though they're both just "moving forward."
