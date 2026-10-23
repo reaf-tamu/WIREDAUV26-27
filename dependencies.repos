@@ -6,4 +6,6 @@ repositories:
   yolo_ros:
     type: git
     url: https://github.com/mgonzs13/yolo_ros.git
-    version: main
+    # 4.7.1 is the last Python/Ultralytics release. On 2026-10-06, main was
+    # rewritten as a C++/ONNX Runtime node that doesn't use PyTorch.
+    version: 4.7.1
