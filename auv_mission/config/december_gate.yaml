@@ -1,0 +1,17 @@
+# December pre-qual try: dive, hold depth + heading, drive straight through the gate, surface.
+# Tune drive_time_s at the pool: start about 3 m behind the gate and drive until
+# the robot is clearly through it.
+mission_node:
+  ros__parameters:
+    start_delay_s: 10.0       # seconds after launch before the run starts (-1.0 = wait for the mission switch; keep the .0 so ROS reads it as a decimal)
+    rate_hz: 10.0
+    target_depth_m: 1.0       # meters below the surface
+    depth_tolerance_m: 0.15
+    depth_settle_s: 3.0
+    dive_timeout_s: 40.0
+    surge_cmd: 0.25           # with surge_ki = surge_kd = 0 this is a fixed throttle (see mission_node.py)
+    drive_time_s: 25.0
+    surface_depth_m: 0.0
+    surface_time_s: 15.0
+    mission_timeout_s: 120.0
+    sensor_timeout_s: 1.0

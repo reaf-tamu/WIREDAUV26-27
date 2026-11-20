@@ -1,4 +1,4 @@
-attitude_control_node:
+pid_control_node:
   ros__parameters:
     roll_kp: 0.0
     roll_ki: 0.0

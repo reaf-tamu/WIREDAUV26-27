@@ -68,7 +68,7 @@ ROLL_GAIN_DEG = 10.0
 PITCH_GAIN_DEG = 10.0
 
 SURGE_SIGN = {'A1': -1, 'A4': -1, 'M1': +1, 'M4': +1}
-YAW_SIGN = {'A1': -1, 'A4': -1, 'M1': +1, 'M4': +1}
+YAW_SIGN = {'A1': +1, 'A4': +1, 'M1': +1, 'M4': +1}
 
 HEAVE_SIGN = {'A2': +1, 'A3': +1, 'M2': +1, 'M3': +1}
 # Left (A2, A3) vs right (M2, M3) -- arbitrary starting sign, unverified.

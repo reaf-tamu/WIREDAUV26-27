@@ -49,6 +49,7 @@ import math
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from geometry_msgs.msg import Wrench
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Range
@@ -174,7 +175,7 @@ class PIDControlNode(Node):
         # subscribe to setpoint, where target positions are published
         self.create_subscription(Setpoint, '/auv/setpoint', self.setpoint_callback, 10)
         # subscribe to pinger data, since odometry only in
-        self.create_subscription(Range, '/ping1d/range', self.range_callback, 10)
+        self.create_subscription(Range, '/ping1d/range', self.range_callback, qos_profile_sensor_data)
         self.wrench_pub = self.create_publisher(Wrench, '/auv/wrench', 10)
 
         self.timer = self.create_timer(0.05, self.control_loop)  # 20 Hz
